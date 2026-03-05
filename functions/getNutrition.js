@@ -39,11 +39,10 @@ const getNutrition = async (food) => {
 
         const ingredientInfo = await infoResponse.json();
 
-        // *** MODIFICATION HERE: Return only the nutrition property ***
         if (ingredientInfo && ingredientInfo.nutrition) {
             return ingredientInfo.nutrition;
         } else {
-            // Handle cases where nutrition data might be missing, though unlikely for common ingredients
+          
             throw new Error(`Nutrition data not found for "${food}".`);
         }
 

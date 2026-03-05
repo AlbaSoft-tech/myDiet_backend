@@ -10,11 +10,6 @@ node_modules/
 .env.*
 !.env.example
 
-# ========================
-# Firebase Admin Secrets
-# ========================
-serviceAccountKey.json
-*.serviceAccountKey.json
 
 # ========================
 # Logs
