@@ -15,7 +15,17 @@ app.use(
   }),
 );
 
-app.use(express.json());
+const unless = function (path, middleware) {
+  return function (req, res, next) {
+    if (req.originalUrl.startsWith(path)) {
+      return next();
+    } else {
+      return middleware(req, res, next);
+    }
+  };
+};
+
+app.use(unless("/api/generate/diet", express.json()))
 
 app.use("/api/generate", generationRoutes);
 
