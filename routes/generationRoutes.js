@@ -7,38 +7,63 @@ dotenv.config({ path: "../.env" });
 
 const router = express.Router();
 
-router.post("/diet", async (req, res) => {
-  const { prompt, type } = req.body;
+router.post(
+  "/diet",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const signature = req.headers["paddle-signature"] || "";
+    console.log(signature);
+    const rawRequestBody = req.body;
+    const secretKey =
+      "pdl_ntfset_01kjzwcvkk4v1st6zfhbtwhvvd_uEZPQ2zqoKKP8RXaJ9YX3fj+KTZOHnGQ";
 
-  if (!prompt) {
-    console.error("Prompt is required but not provided");
-    return res.status(400).json({ message: "Prompt is required" });
-  }
+    let prompt, type;
+    try {
+      if (signature && rawRequestBody) {
+        const eventData = await paddle.webhooks.unmarshal(
+          rawRequestBody,
+          secretKey,
+          signature,
+        );
+        switch (eventData.eventType) {
+          case EventName.TransactionCompleted:
+            ({ prompt, type } = eventData.data.customData);
+            break;
+          default:
+            console.log("Ignored event:", eventData.eventType);
+        }
+      } else {
+        console.log("Signature missing in header");
+      }
+      if (!prompt || !type) {
+        return res
+          .status(400)
+          .json({ message: "Missing prompt or type in request" });
+      }
+      const generated = await generation(prompt, type);
 
-  try {
-    const generated = await generation(prompt, type);
+      if (!generated) {
+        return res
+          .status(500)
+          .json({ message: "Generation failed, please try again" });
+      }
 
-    if (!generated) {
+      const docRef = await db.collection("diets").add({
+        diet: {
+          ...generated,
+        },
+        createdAt: new Date(),
+      });
+      console.log("done");
       return res
-        .status(500)
-        .json({ message: "Generation failed, please try again" });
+        .status(200)
+        .json({ message: "Diet generated successfully", id: docRef.id });
+    } catch (error) {
+      console.error("Error in generation route", error);
+      res.status(500).json({ message: "Internal server error" });
     }
-
-    const docRef = await db.collection("diets").add({
-      diet: {
-        ...generated,
-      },
-      createdAt: new Date(),
-    });
-    console.log("done");
-    return res
-      .status(200)
-      .json({ message: "Diet generated successfully", id: docRef.id });
-  } catch (error) {
-    console.error("Error in generation route", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+  },
+);
 
 router.get("/fetch", async (req, res) => {
   try {
