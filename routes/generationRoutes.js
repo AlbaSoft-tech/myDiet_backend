@@ -2,6 +2,13 @@ import express from "express";
 import generation from "../functions/generate.js";
 import dotenv from "dotenv";
 import db from "../db/firebase.js";
+import { Paddle, EventName } from "@paddle/paddle-node-sdk";
+
+const paddle = new Paddle({
+  apiKey:
+    "pdl_sdbx_apikey_01kjzypg6yj9xg0ag5vch26r87_NnEXkyCbbsQtGYHDa1HvRR_ARR",
+  environment: "production",
+});
 
 dotenv.config({ path: "../.env" });
 
