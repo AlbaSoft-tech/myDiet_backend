@@ -7,11 +7,12 @@ import { Resend } from "resend";
 
 const resend = new Resend("re_e9JPf6YP_26sH57apgcwezDQ9PX6X4yJ7");
 
-const paddle = new Paddle({
-  apiKey:
-    "pdl_sdbx_apikey_01kjzypg6yj9xg0ag5vch26r87_NnEXkyCbbsQtGYHDa1HvRR_ARR",
-  environment: "production",
-});
+const paddle = new Paddle(
+  "pdl_sdbx_apikey_01kjzypg6yj9xg0ag5vch26r87_NnEXkyCbbsQtGYHDa1HvRR_ARR",
+  {
+    environment: Environment.sandbox,
+  },
+);
 
 dotenv.config({ path: "../.env" });
 
@@ -75,8 +76,8 @@ router.post(
       });
 
       const customerId = eventData.data.customerId;
-      const customer = await paddle.customers.get(customerId);
-      const email = customer.email;
+      const customerResponse = await paddle.customers.get(customerId);
+      const email = customerResponse.data.email; 
 
       if (!email) {
         console.error("No email found for customer:", customerId);
