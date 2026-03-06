@@ -77,7 +77,7 @@ router.post(
 
       const customerId = eventData.data.customerId;
       const customerResponse = await paddle.customers.get(customerId);
-      console.log(customerResponse.data);
+      console.log(customerResponse);
 
       if (!email) {
         console.error("No email found for customer:", customerId);
