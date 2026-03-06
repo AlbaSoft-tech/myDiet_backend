@@ -18,14 +18,18 @@ router.post(
   "/diet",
   express.raw({ type: "application/json" }),
   async (req, res) => {
+    // Respond to Paddle immediately
+    res.status(200).send("OK");
+
     const signature = req.headers["paddle-signature"] || "";
-    const rawRequestBody = req.body;
+    const rawRequestBody = req.body.toString(); // make sure it's a string
     const secretKey =
       "pdl_ntfset_01kjzwcvkk4v1st6zfhbtwhvvd_uEZPQ2zqoKKP8RXaJ9YX3fj+KTZOHnGQ";
 
     try {
       if (!signature || !rawRequestBody) {
-        return res.status(400).send("Missing signature");
+        console.log("Missing signature");
+        return;
       }
 
       const eventData = await paddle.webhooks.unmarshal(
@@ -36,12 +40,11 @@ router.post(
 
       if (eventData.eventType !== EventName.TransactionCompleted) {
         console.log("Ignored event:", eventData.eventType);
-        return res.status(200).send("Ignored");
+        return;
       }
 
       const transactionId = eventData.data.id;
 
-      // 🔒 Prevent duplicate processing
       const existing = await db
         .collection("diets")
         .where("transactionId", "==", transactionId)
@@ -50,7 +53,7 @@ router.post(
 
       if (!existing.empty) {
         console.log("Duplicate webhook ignored:", transactionId);
-        return res.status(200).send("Already processed");
+        return;
       }
 
       const { prompt, type } = eventData.data.customData;
@@ -58,7 +61,8 @@ router.post(
       const generated = await generation(prompt, type);
 
       if (!generated) {
-        return res.status(500).json({ message: "Generation failed" });
+        console.error("Generation failed for transaction:", transactionId);
+        return;
       }
 
       const docRef = await db.collection("diets").add({
@@ -68,13 +72,8 @@ router.post(
       });
 
       console.log("Diet generated:", docRef.id);
-
-      return res
-        .status(200)
-        .json({ message: "Diet generated successfully", id: docRef.id });
     } catch (error) {
-      console.error("Error in generation route", error);
-      res.status(500).json({ message: "Internal server error" });
+      console.error("Error in webhook processing:", error);
     }
   },
 );
