@@ -2,7 +2,7 @@ import express from "express";
 import generation from "../functions/generate.js";
 import dotenv from "dotenv";
 import db from "../db/firebase.js";
-import { Paddle, EventName } from "@paddle/paddle-node-sdk";
+import { Paddle, EventName, Environment } from "@paddle/paddle-node-sdk";
 import { Resend } from "resend";
 
 const resend = new Resend("re_e9JPf6YP_26sH57apgcwezDQ9PX6X4yJ7");
@@ -77,7 +77,7 @@ router.post(
 
       const customerId = eventData.data.customerId;
       const customerResponse = await paddle.customers.get(customerId);
-      const email = customerResponse.data.email; 
+      const email = customerResponse.data.email;
 
       if (!email) {
         console.error("No email found for customer:", customerId);
