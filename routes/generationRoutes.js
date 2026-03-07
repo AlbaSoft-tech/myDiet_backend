@@ -58,6 +58,8 @@ router.post(
 
       const { prompt, type } = eventData.data.customData;
 
+      console.log(prompt);
+
       const generated = await generation(prompt, type);
 
       if (!generated) {
