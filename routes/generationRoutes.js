@@ -3,16 +3,14 @@ import generation from "../functions/generate.js";
 import dotenv from "dotenv";
 import db from "../db/firebase.js";
 import { Paddle, EventName, Environment } from "@paddle/paddle-node-sdk";
-import { Resend } from "resend";
+import sgMail from "@sendgrid/mail";
+dotenv.config({ path: "../.env" });
 
-const resend = new Resend("re_e9JPf6YP_26sH57apgcwezDQ9PX6X4yJ7");
+sgMail.setApiKey(process.env.SENDGRID);
 
-const paddle = new Paddle(
-  "pdl_sdbx_apikey_01kjzypg6yj9xg0ag5vch26r87_NnEXkyCbbsQtGYHDa1HvRR_ARR",
-  {
-    environment: Environment.sandbox,
-  },
-);
+const paddle = new Paddle(process.env.PADDLE_API_KEY, {
+  environment: Environment.sandbox,
+});
 
 dotenv.config({ path: "../.env" });
 
@@ -22,13 +20,11 @@ router.post(
   "/diet",
   express.raw({ type: "application/json" }),
   async (req, res) => {
-    // Respond to Paddle immediately
     res.status(200).send("OK");
 
     const signature = req.headers["paddle-signature"] || "";
-    const rawRequestBody = req.body.toString(); // make sure it's a string
-    const secretKey =
-      "pdl_ntfset_01kjzwcvkk4v1st6zfhbtwhvvd_uEZPQ2zqoKKP8RXaJ9YX3fj+KTZOHnGQ";
+    const rawRequestBody = req.body.toString();
+    const secretKey = process.env.PADDLE_SECRET_KEY;
 
     try {
       if (!signature || !rawRequestBody) {
@@ -84,10 +80,13 @@ router.post(
         return;
       }
 
-      await resend.emails.send({
-        from: "Matura App <no-reply@maturaapp.org>",
+      const msg = {
         to: email.toLowerCase(),
-        subject: "Your Personalized Diet Plan is Ready! - Matura",
+        from: {
+          name: "GetMyDiet",
+          email: "noreply@get-my-diet.com",
+        },
+        subject: "Your Personalized Diet Plan is Ready!",
         text: `Hello,
 
 Your personalized diet plan has been generated and is ready for you!
@@ -123,7 +122,10 @@ The Matura Team`,
     </p>
 </div>
 `,
-      });
+      };
+
+      await sgMail.send(msg);
+      console.log("Email sent");
 
       console.log("Diet generated:", docRef.id);
     } catch (error) {
