@@ -9,7 +9,7 @@ const PORT = process.env.PORT;
 
 app.use(
   cors({
-    origin: "http://get-my-diet.com",
+    origin: ["https://get-my-diet.com", "https://www.get-my-diet.com"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
@@ -25,7 +25,7 @@ const unless = function (path, middleware) {
   };
 };
 
-app.use(unless("/api/generate/diet", express.json()))
+app.use(unless("/api/generate/diet", express.json()));
 
 app.use("/api/generate", generationRoutes);
 
