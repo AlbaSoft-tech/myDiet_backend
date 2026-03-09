@@ -74,8 +74,20 @@ router.post(
       });
 
       const customerId = eventData.data.customerId;
-      const customerResponse = await paddle.customers.get(customerId);
-      const email = customerResponse.email;
+      console.log("customer id: ", customerId);
+      try {
+        const customerResponse = await paddle.customers.get(customerId);
+        const email = customerResponse.data.email;
+        console.log("Success! Customer email:", email);
+      } catch (error) {
+
+        console.error("--- Paddle API Error ---");
+        console.error("Status Code:", error.status); 
+        console.error("Error Code:", error.code); 
+        console.error("Detail:", error.detail); 
+
+        console.error(JSON.stringify(error, null, 2));
+      }
 
       if (!email) {
         console.error("No email found for customer:", customerId);
