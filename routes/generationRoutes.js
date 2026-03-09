@@ -56,7 +56,7 @@ router.post(
         return;
       }
 
-      const { prompt, type } = eventData.data.customData;
+      const { prompt, type, email } = eventData.data.customData;
 
       console.log(prompt);
 
@@ -69,25 +69,10 @@ router.post(
 
       const docRef = await db.collection("diets").add({
         transactionId,
+        email: email.toLowerCase(),
         diet: generated,
         createdAt: new Date(),
       });
-
-      const customerId = eventData.data.customerId;
-      console.log("customer id: ", customerId);
-      try {
-        const customerResponse = await paddle.customers.get(customerId);
-        const email = customerResponse.data.email;
-        console.log("Success! Customer email:", email);
-      } catch (error) {
-
-        console.error("--- Paddle API Error ---");
-        console.error("Status Code:", error.status); 
-        console.error("Error Code:", error.code); 
-        console.error("Detail:", error.detail); 
-
-        console.error(JSON.stringify(error, null, 2));
-      }
 
       if (!email) {
         console.error("No email found for customer:", customerId);
