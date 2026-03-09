@@ -9,7 +9,7 @@ dotenv.config({ path: "../.env" });
 sgMail.setApiKey(process.env.SENDGRID);
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY, {
-  environment: Environment.sandbox,
+  environment: Environment.production,
 });
 
 dotenv.config({ path: "../.env" });
